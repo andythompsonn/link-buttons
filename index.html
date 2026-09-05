@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Link Buttons</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:24px}
+    .btn{display:inline-block;margin:6px;padding:10px 14px;background:#007bff;color:#fff;border-radius:6px;text-decoration:none}
+    .btn:hover{opacity:0.9}
+    .ctrl{margin-top:12px}
+  </style>
+</head>
+<body>
+  <h1>Link Buttons</h1>
+  <div id="buttons" aria-live="polite"></div>
+  <hr>
+  <h2>Add / Edit</h2>
+  <div class="ctrl">
+    <input id="label" placeholder="Label">
+    <input id="url" placeholder="https://example.com" style="width:320px">
+    <button id="add">Add</button>
+    <button id="clear">Clear saved</button>
+  </div>
+
+  <script>
+    const key='linkButtons.v1'
+    const load=()=>JSON.parse(localStorage.getItem(key)||'[]')
+    const save=(arr)=>localStorage.setItem(key,JSON.stringify(arr))
+    const render=()=>{
+      const out=document.getElementById('buttons'); out.innerHTML=''
+      load().forEach((b,i)=>{
+        const a=document.createElement('a'); a.href=b.url; a.textContent=b.label; a.className='btn'; a.target='_blank'
+        const del=document.createElement('button'); del.textContent='✕'; del.style.marginLeft='6px'
+        del.onclick=()=>{ const arr=load(); arr.splice(i,1); save(arr); render() }
+        const wrap=document.createElement('span'); wrap.style.display='inline-block'; wrap.style.margin='4px'
+        wrap.appendChild(a); wrap.appendChild(del); out.appendChild(wrap)
+      })
+    }
+    document.getElementById('add').onclick=()=>{
+      const label=document.getElementById('label').value.trim()||'untitled'
+      let url=document.getElementById('url').value.trim()||'#'
+      if(url !== '#' && !/^https?:\/\//i.test(url)) url = 'https://' + url
+      const arr=load(); arr.push({label,url}); save(arr); render()
+    }
+    document.getElementById('clear').onclick=()=>{ localStorage.removeItem(key); render() }
+    render()
+  </script>
+</body>
+</html>
