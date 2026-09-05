@@ -1,49 +1,73 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Link Buttons</title>
   <style>
-    body{font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;margin:24px}
-    .btn{display:inline-block;margin:6px;padding:10px 14px;background:#007bff;color:#fff;border-radius:6px;text-decoration:none}
-    .btn:hover{opacity:0.9}
-    .ctrl{margin-top:12px}
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;margin:2rem}
+    .buttons{display:flex;gap:0.5rem;flex-wrap:wrap}
+    .btn{padding:0.6rem 1rem;background:#0366d6;color:#fff;border-radius:6px;text-decoration:none}
+    .controls{margin-top:1rem}
+    input{padding:0.4rem;margin-right:0.5rem}
   </style>
 </head>
 <body>
   <h1>Link Buttons</h1>
-  <div id="buttons" aria-live="polite"></div>
-  <hr>
-  <h2>Add / Edit</h2>
-  <div class="ctrl">
-    <input id="label" placeholder="Label">
-    <input id="url" placeholder="https://example.com" style="width:320px">
-    <button id="add">Add</button>
-    <button id="clear">Clear saved</button>
+  <div class="buttons" id="buttons"></div>
+
+  <div class="controls">
+    <input id="label" placeholder="Label" />
+    <input id="href" placeholder="https://example.com" />
+    <button id="add">Add button</button>
+    <button id="clear">Clear all</button>
   </div>
 
   <script>
-    const key='linkButtons.v1'
-    const load=()=>JSON.parse(localStorage.getItem(key)||'[]')
-    const save=(arr)=>localStorage.setItem(key,JSON.stringify(arr))
-    const render=()=>{
-      const out=document.getElementById('buttons'); out.innerHTML=''
-      load().forEach((b,i)=>{
-        const a=document.createElement('a'); a.href=b.url; a.textContent=b.label; a.className='btn'; a.target='_blank'
-        const del=document.createElement('button'); del.textContent='✕'; del.style.marginLeft='6px'
-        del.onclick=()=>{ const arr=load(); arr.splice(i,1); save(arr); render() }
-        const wrap=document.createElement('span'); wrap.style.display='inline-block'; wrap.style.margin='4px'
-        wrap.appendChild(a); wrap.appendChild(del); out.appendChild(wrap)
-      })
+    const STORAGE_KEY = 'link-buttons:items'
+    const buttonsEl = document.getElementById('buttons')
+    const labelEl = document.getElementById('label')
+    const hrefEl = document.getElementById('href')
+    const addBtn = document.getElementById('add')
+    const clearBtn = document.getElementById('clear')
+
+    function load(){
+      try{
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+      }catch(e){return []}
     }
-    document.getElementById('add').onclick=()=>{
-      const label=document.getElementById('label').value.trim()||'untitled'
-      let url=document.getElementById('url').value.trim()||'#'
-      if(url !== '#' && !/^https?:\/\//i.test(url)) url = 'https://' + url
-      const arr=load(); arr.push({label,url}); save(arr); render()
+    function save(items){ localStorage.setItem(STORAGE_KEY, JSON.stringify(items)) }
+
+    function render(){
+      buttonsEl.innerHTML = ''
+      const items = load()
+      for(const it of items){
+        const a = document.createElement('a')
+        a.className = 'btn'
+        a.href = it.href
+        a.target = '_blank'
+        a.textContent = it.label
+        buttonsEl.appendChild(a)
+      }
     }
-    document.getElementById('clear').onclick=()=>{ localStorage.removeItem(key); render() }
+
+    addBtn.addEventListener('click', ()=>{
+      const label = labelEl.value.trim()
+      const href = hrefEl.value.trim()
+      if(!label || !href) return alert('Fill both label and URL')
+      const items = load()
+      items.push({label, href})
+      save(items)
+      labelEl.value = hrefEl.value = ''
+      render()
+    })
+
+    clearBtn.addEventListener('click', ()=>{
+      if(!confirm('Clear all buttons?')) return
+      save([])
+      render()
+    })
+
     render()
   </script>
 </body>
